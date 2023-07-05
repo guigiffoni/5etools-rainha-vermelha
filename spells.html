@@ -171,6 +171,27 @@
 <script type="text/javascript" src="js/spells.js"></script>
 <script type="text/javascript" src="js/list2.js"></script>
 <script type="text/javascript" src="lib/elasticlunr.js"></script>
+<script>
+	(async () => {
+		const sleep = (time) => new Promise(res => setTimeout(() => res(true), time));
+
+		await sleep(1500);
+
+		document.querySelector('.list--stats.spells').addEventListener('click', async () => {
+			const table = document.querySelector('#pagecontent');
+
+			await sleep(10);
+			const matches = table.innerHTML.match(/\d+\b(\sfeet|-foot)\b/g);
+
+			matches?.forEach(match => {
+				const blocks = match.match(/\d+/) / 5;
+				const meters = blocks * 1.5;
+
+				table.innerHTML = table.innerHTML.replace(match, `${blocks}b / ${meters}m`);
+			})
+		})
+	})()
+</script>
 </body>
 
 </html>
