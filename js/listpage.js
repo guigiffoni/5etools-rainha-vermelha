@@ -33,13 +33,16 @@ class SublistManager {
 	static _SUB_HASH_PREFIX = "sublistselected";
 
 	/**
-	 * @param opts.sublistClass Sublist class.
+	 * @param [opts]
+	 * @param [opts.sublistClass] Sublist class.
 	 * @param [opts.sublistListOptions] Other sublist options.
 	 * @param [opts.isSublistItemsCountable] If the sublist items should be countable, i.e. have a quantity.
 	 * @param [opts.shiftCountAddSubtract] If the sublist items should be countable, i.e. have a quantity.
 	 */
 	constructor (opts) {
-		this._sublistClass = opts.sublistClass;
+		opts = opts || {};
+
+		this._sublistClass = opts.sublistClass; // TODO(PageGen) remove once all pages transitioned
 		this._sublistListOptions = opts.sublistListOptions || {};
 		this._isSublistItemsCountable = !!opts.isSublistItemsCountable;
 		this._shiftCountAddSubtract = opts.shiftCountAddSubtract ?? 20;
@@ -84,7 +87,7 @@ class SublistManager {
 
 		this._listSub = new List({
 			...this._sublistListOptions,
-			$wrpList: $(`.${this._sublistClass}`),
+			$wrpList: this._sublistClass ? $(`.${this._sublistClass}`) : $(`#sublist`),
 			isUseJquery: true,
 		});
 
@@ -165,7 +168,7 @@ class SublistManager {
 		return this._isSublistItemsCountable
 			? new ContextUtil.Action(
 				"Remove",
-				async (evt, userData) => {
+				async (evt, {userData}) => {
 					const {selection} = userData;
 					await Promise.all(selection.map(item => this.pDoSublistRemove({entity: item.data.entity, doFinalize: false})));
 					await this._pFinaliseSublist();
@@ -173,7 +176,7 @@ class SublistManager {
 			)
 			: new ContextUtil.Action(
 				"Unpin",
-				async (evt, userData) => {
+				async (evt, {userData}) => {
 					const {selection} = userData;
 					for (const item of selection) {
 						await this.pDoSublistRemove({entity: item.data.entity, doFinalize: false});
@@ -187,7 +190,7 @@ class SublistManager {
 		const subActions = [
 			new ContextUtil.Action(
 				"Popout",
-				(evt, userData) => {
+				(evt, {userData}) => {
 					const {ele, selection} = userData;
 					const entities = selection.map(listItem => ({entity: listItem.data.entity, hash: listItem.values.hash}));
 					return _UtilListPage.pDoMassPopout(evt, ele, entities);
@@ -237,7 +240,7 @@ class SublistManager {
 		}
 
 		const ele = listItem.ele instanceof $ ? listItem.ele[0] : listItem.ele;
-		ContextUtil.pOpenMenu(evt, menu, {ele: ele, selection});
+		ContextUtil.pOpenMenu(evt, menu, {userData: {ele: ele, selection}});
 	}
 
 	pGetSublistItem () { throw new Error(`Unimplemented!`); }
@@ -842,7 +845,7 @@ class ListPage {
 	 * `pageFilter` must be specified.)
 	 * @param [opts.pageFilter] PageFilter implementation for this page. (Either `filters` and `filterSource` or
 	 * `pageFilter` must be specified.)
-	 * @param opts.listClass List class.
+	 * @param [opts.listClass] List class.
 	 * @param opts.listOptions Other list options.
 	 * @param opts.dataProps JSON data propert(y/ies).
 	 *
@@ -872,7 +875,7 @@ class ListPage {
 		this._filters = opts.filters;
 		this._filterSource = opts.filterSource;
 		this._pageFilter = opts.pageFilter;
-		this._listClass = opts.listClass;
+		this._listClass = opts.listClass; // TODO(PageGen) remove once all pages transitioned
 		this._listOptions = opts.listOptions || {};
 		this._dataProps = opts.dataProps;
 		this._bookViewOptions = opts.bookViewOptions;
@@ -886,6 +889,7 @@ class ListPage {
 		this._listSyntax = opts.listSyntax || new ListUiUtil.ListSyntax({fnGetDataList: () => this._dataList, pFnGetFluff: opts.pFnGetFluff});
 		this._compSettings = opts.compSettings ? opts.compSettings : null;
 
+		this._lockHashchange = new VeLock({name: "hashchange"});
 		this._renderer = Renderer.get();
 		this._list = null;
 		this._filterBox = null;
@@ -1006,7 +1010,7 @@ class ListPage {
 		const $btnReset = $("#reset");
 		this._list = this._initList({
 			$iptSearch,
-			$wrpList: $(`.list.${this._listClass}`),
+			$wrpList: this._listClass ? $(`.list.${this._listClass}`) : $(`#list`),
 			$btnReset,
 			$btnClear: $(`#lst__search-glass`),
 			dispPageTagline: document.getElementById(`page__subtitle`),
@@ -1251,8 +1255,8 @@ class ListPage {
 			.on("click", async evt => {
 				let url = window.location.href;
 
-				if (evt.ctrlKey || evt.metaKey) {
-					await MiscUtil.pCopyTextToClipboard(this._filterBox.getFilterTag());
+				if (EventUtil.isCtrlMetaKey(evt)) {
+					await MiscUtil.pCopyTextToClipboard(this._filterBox.getFilterTag({isAddSearchTerm: true}));
 					JqueryUtil.showCopiedEffect($btn);
 					return;
 				}
@@ -1279,7 +1283,7 @@ class ListPage {
 				(evt) => {
 					if (Hist.lastLoadedId === null) return;
 
-					if (this._isMarkdownPopout && (evt.ctrlKey || evt.metaKey)) return this._bindPopoutButton_doShowMarkdown(evt);
+					if (this._isMarkdownPopout && (EventUtil.isCtrlMetaKey(evt))) return this._bindPopoutButton_doShowMarkdown(evt);
 					return this._bindPopoutButton_doShowStatblock(evt);
 				},
 			);
@@ -1455,16 +1459,20 @@ class ListPage {
 			return;
 		}
 
-		let tgtItemOtherList = null;
-		for (let i = it.x + dir; i >= 0 && i < lists.length; i += dir) {
-			if (!lists[i]?.visibleItems?.length) continue;
+		let ixListOther = it.x + dir;
 
-			tgtItemOtherList = dir === 1 ? lists[i].visibleItems[0] : lists[i].visibleItems.last();
-		}
+		if (ixListOther === -1) ixListOther = lists.length - 1;
+		else if (ixListOther === lists.length) ixListOther = 0;
 
-		if (tgtItemOtherList) {
+		for (; ixListOther >= 0 && ixListOther < lists.length; ixListOther += dir) {
+			if (!lists[ixListOther]?.visibleItems?.length) continue;
+
+			const tgtItemOtherList = dir === 1 ? lists[ixListOther].visibleItems[0] : lists[ixListOther].visibleItems.last();
+			if (!tgtItemOtherList) continue;
+
 			window.location.hash = tgtItemOtherList.values.hash;
 			this._initList_scrollToItem();
+			return;
 		}
 	}
 
@@ -1492,7 +1500,7 @@ class ListPage {
 			selection = [listItem];
 		}
 
-		ContextUtil.pOpenMenu(evt, this._contextMenuList, {ele: listItem.ele, selection});
+		ContextUtil.pOpenMenu(evt, this._contextMenuList, {userData: {ele: listItem.ele, selection}});
 	}
 
 	_initContextMenu () {
@@ -1501,7 +1509,7 @@ class ListPage {
 		this._contextMenuList = ContextUtil.getMenu([
 			new ContextUtil.Action(
 				"Popout",
-				async (evt, userData) => {
+				async (evt, {userData}) => {
 					const {ele, selection} = userData;
 					await this._handleGenericContextMenuClick_pDoMassPopout(evt, ele, selection);
 				},
@@ -1542,7 +1550,7 @@ class ListPage {
 	_getContextActionBlocklist () {
 		return new ContextUtil.Action(
 			"Blocklist",
-			async (evt, userData) => {
+			async (evt, {userData}) => {
 				const {ele, selection} = userData;
 				await this._handleGenericContextMenuClick_pDoMassBlocklist(evt, ele, selection);
 			},
@@ -1701,19 +1709,26 @@ class ListPage {
 
 	doDeselectAll () { this.primaryLists.forEach(list => list.deselectAll()); }
 
-	async pDoLoadHash (id) {
-		this._lastRender.entity = this._dataList[id];
-		await this._pDoLoadHash(id);
+	async pDoLoadHash (id, {lockToken} = {}) {
+		try {
+			lockToken = await this._lockHashchange.pLock({token: lockToken});
+			this._lastRender.entity = this._dataList[id];
+			return (await this._pDoLoadHash({id, lockToken}));
+		} finally {
+			this._lockHashchange.unlock();
+		}
 	}
 
 	getListItem () { throw new Error(`Unimplemented!`); }
 	pHandleUnknownHash () { throw new Error(`Unimplemented!`); }
 
-	async pDoLoadSubHash (sub) {
-		if (this._filterBox) sub = this._filterBox.setFromSubHashes(sub);
-		if (this._sublistManager) sub = await this._sublistManager.pSetFromSubHashes(sub);
-		if (this._bookView) sub = await this._bookView.pHandleSub(sub);
-		return sub;
+	async pDoLoadSubHash (sub, {lockToken} = {}) {
+		try {
+			lockToken = await this._lockHashchange.pLock({token: lockToken});
+			return (await this._pDoLoadSubHash({sub, lockToken}));
+		} finally {
+			this._lockHashchange.unlock();
+		}
 	}
 
 	/* -------------------------------------------- */
@@ -1728,7 +1743,7 @@ class ListPage {
 
 	_tabTitleStats = "Traits";
 
-	async _pDoLoadHash (id) {
+	async _pDoLoadHash ({id, lockToken}) {
 		this._$pgContent.empty();
 
 		this._renderer.setFirstSection(true);
@@ -1757,6 +1772,15 @@ class ListPage {
 			tabMetaStats,
 			tabMetasAdditional,
 		});
+	}
+
+	async _pPreloadSublistSources (json) { /* Implement as required */ }
+
+	async _pDoLoadSubHash ({sub, lockToken}) {
+		if (this._filterBox) sub = this._filterBox.setFromSubHashes(sub);
+		if (this._sublistManager) sub = await this._sublistManager.pSetFromSubHashes(sub, this._pPreloadSublistSources.bind(this));
+		if (this._bookView) sub = await this._bookView.pHandleSub(sub);
+		return sub;
 	}
 
 	_renderStats_getTabMetasAdditional ({ent}) { return []; }
@@ -1886,8 +1910,8 @@ class ListPageBookView extends BookModeViewBase {
 		</div>`;
 	}
 
-	_$getWrpControls ({$wrpContent}) {
-		const out = super._$getWrpControls({$wrpContent});
+	async _$pGetWrpControls ({$wrpContent}) {
+		const out = await super._$pGetWrpControls({$wrpContent});
 		const {$wrpPrint} = out;
 		if (this._propMarkdown) this._$getControlsMarkdown().appendTo($wrpPrint);
 		return out;

@@ -1,12 +1,6 @@
 "use strict";
 
 class BackgroundSublistManager extends SublistManager {
-	constructor () {
-		super({
-			sublistClass: "subbackgrounds",
-		});
-	}
-
 	pGetSublistItem (it, hash) {
 		const name = it.name.replace("Variant ", "");
 		const skills = Renderer.background.getSkillSummary(it.skillProficiencies || [], true);
@@ -48,8 +42,6 @@ class BackgroundPage extends ListPage {
 
 			pageFilter,
 
-			listClass: "backgrounds",
-
 			bookViewOptions: {
 				namePlural: "backgrounds",
 				pageTitle: "Backgrounds Book View",
@@ -72,7 +64,7 @@ class BackgroundPage extends ListPage {
 		eleLi.innerHTML = `<a href="#${hash}" class="lst--border lst__row-inner">
 			<span class="bold col-4 pl-0">${name}</span>
 			<span class="col-6">${bg._skillDisplay}</span>
-			<span class="col-2 text-center ${Parser.sourceJsonToColor(bg.source)} pr-0" title="${Parser.sourceJsonToFull(bg.source)}" ${Parser.sourceJsonToStyle(bg.source)}>${source}</span>
+			<span class="col-2 ve-text-center ${Parser.sourceJsonToColor(bg.source)} pr-0" title="${Parser.sourceJsonToFull(bg.source)}" ${Parser.sourceJsonToStyle(bg.source)}>${source}</span>
 		</a>`;
 
 		const listItem = new ListItem(

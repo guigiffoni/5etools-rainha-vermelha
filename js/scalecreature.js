@@ -2050,7 +2050,7 @@ globalThis.ScaleCreature = {
 					} else return m[0];
 				});
 
-				const mClasses = /(artificer|bard|cleric|druid|paladin|ranger|sorcerer|warlock|wizard) spell(?:s)?/i.exec(outStr);
+				const mClasses = /(artificer|bard|cleric|druid|paladin|ranger|sorcerer|warlock|wizard) spells?/i.exec(outStr);
 				if (mClasses) spellsFromClass = mClasses[1];
 				else {
 					const mClasses2 = /(artificer|bard|cleric|druid|paladin|ranger|sorcerer|warlock|wizard)(?:'s)? spell list/i.exec(outStr);
@@ -2433,7 +2433,8 @@ globalThis.ScaleClassSummonedCreature = {
 
 			it.special = it.special
 				// "13 + PB (natural armor)"
-				.replace(/(\d+)\s*\+\s*PB\b/g, (...m) => Number(m[1]) + state.proficiencyBonus)
+				// "13 plus PB (natural armor)"
+				.replace(/(\d+)\s*(\+|plus)\s*PB\b/g, (...m) => Number(m[1]) + state.proficiencyBonus)
 			;
 
 			ScaleSummonedCreature._mutSimpleSpecialAcItem(it);

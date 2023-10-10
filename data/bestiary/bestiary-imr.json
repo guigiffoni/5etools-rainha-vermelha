@@ -166,12 +166,18 @@
 			],
 			"miscTags": [
 				"AOE",
+				"MLW",
 				"MW"
 			],
 			"conditionInflict": [
 				"charmed",
 				"incapacitated",
 				"stunned"
+			],
+			"savingThrowForced": [
+				"constitution",
+				"dexterity",
+				"wisdom"
 			],
 			"hasToken": true,
 			"hasFluffImages": true
@@ -387,6 +393,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"MLW",
 				"MW",
 				"RNG",
 				"RW"
@@ -397,6 +404,14 @@
 			],
 			"conditionInflictSpell": [
 				"restrained"
+			],
+			"savingThrowForced": [
+				"constitution",
+				"dexterity"
+			],
+			"savingThrowForcedSpell": [
+				"dexterity",
+				"strength"
 			],
 			"hasToken": true
 		},
@@ -521,6 +536,12 @@
 			"conditionInflict": [
 				"petrified",
 				"restrained"
+			],
+			"savingThrowForced": [
+				"constitution"
+			],
+			"savingThrowForcedSpell": [
+				"dexterity"
 			],
 			"hasToken": true
 		},
@@ -705,6 +726,7 @@
 				"P"
 			],
 			"miscTags": [
+				"MLW",
 				"MW"
 			],
 			"hasToken": true,
@@ -897,6 +919,14 @@
 			"miscTags": [
 				"MW"
 			],
+			"savingThrowForced": [
+				"intelligence"
+			],
+			"savingThrowForcedSpell": [
+				"constitution",
+				"dexterity",
+				"wisdom"
+			],
 			"hasToken": true,
 			"hasFluffImages": true
 		},
@@ -1029,6 +1059,12 @@
 			"conditionInflictSpell": [
 				"paralyzed",
 				"prone"
+			],
+			"savingThrowForced": [
+				"constitution"
+			],
+			"savingThrowForcedSpell": [
+				"wisdom"
 			],
 			"hasToken": true,
 			"hasFluff": true,
@@ -1220,12 +1256,16 @@
 				"S"
 			],
 			"miscTags": [
+				"MLW",
 				"MW",
 				"RW",
 				"THW"
 			],
 			"conditionInflict": [
 				"prone"
+			],
+			"savingThrowForced": [
+				"strength"
 			],
 			"hasToken": true,
 			"hasFluff": true
@@ -1574,9 +1614,17 @@
 				"CA"
 			],
 			"miscTags": [
+				"MLW",
 				"MW",
 				"RW",
 				"THW"
+			],
+			"savingThrowForced": [
+				"constitution"
+			],
+			"savingThrowForcedSpell": [
+				"constitution",
+				"dexterity"
 			],
 			"hasToken": true,
 			"hasFluff": true,
@@ -1693,6 +1741,9 @@
 			"conditionInflict": [
 				"poisoned",
 				"unconscious"
+			],
+			"savingThrowForced": [
+				"constitution"
 			],
 			"hasToken": true,
 			"hasFluff": true,
@@ -1880,6 +1931,14 @@
 				"grappled",
 				"prone",
 				"restrained"
+			],
+			"savingThrowForced": [
+				"constitution",
+				"dexterity"
+			],
+			"savingThrowForcedLegendary": [
+				"strength",
+				"wisdom"
 			],
 			"hasToken": true,
 			"hasFluff": true

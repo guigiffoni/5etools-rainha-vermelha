@@ -114,7 +114,7 @@ class TableListPage extends ListPage {
 	_pOnLoad_bindMiscButtons () { /* No-op */ }
 	pDoLoadSubHash () { /* No-op */ }
 
-	_pDoLoadHash (id) {
+	_pDoLoadHash ({id, lockToken}) {
 		Renderer.get().setFirstSection(true);
 
 		const ent = this._dataList[id];
@@ -162,7 +162,7 @@ class TableListPage extends ListPage {
 			});
 		}
 
-		const ptResult = Renderer.get().render(row.result.replace(/{@dice /, "{@autodice "));
+		const ptResult = Renderer.get().render(row.result.replace(/{@dice /g, "{@autodice "));
 		const $ptAttitude = this._roll_$getPtAttitude(row);
 
 		const $ele = $$`<span><strong>${roll}</strong> ${ptResult}${$ptAttitude}</span>`;
